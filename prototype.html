@@ -1,0 +1,132 @@
+<html><head>
+  <meta charset="utf-8">
+  <title>Building Blocks app</title>
+  <style>
+  	* {
+		font-family: "Fira Sans";
+		
+		border: 0px;
+		margin: 0px;
+		padding: 0px;
+		box-sizing: border-box;
+	}
+	@font-face {
+		font-family: 'Fira Sans';
+		font-style: normal;
+		font-weight: 400;
+		src: local('Fira Sans'), local('FiraSans-Regular'), url("./fonts/FiraSans-Regular.otf");
+	}
+	@font-face {
+		font-family: 'Fira Sans';
+		font-style: normal;
+		font-weight: 300;
+		src: local('Fira Sans'), local('FiraSans-Light'), url("./fonts/FiraSans-Light.otf");
+	}
+	@font-face {
+		font-family: 'Fira Sans';
+		font-style: normal;
+		font-weight: 500;
+		src: local('Fira Sans'), local('FiraSans-Medium'), url("./fonts/FiraSans-Medium.otf");
+	}
+	@font-face {
+		font-family: 'Fira Mono';
+		font-style: normal;
+		font-weight: 400;
+		src: local('Fira Mono'), local('FiraMono-Regular'), url("./fonts/FiraMono-Regular.otf");
+	}
+	header {
+		width: 100%; 
+		display: inline-block;
+		height: 49px; 
+		background: linear-gradient(#CD6723, #BB482D); 
+		border-bottom: solid 1px #992F21; 
+		margin-bottom: 1px;
+	}
+	header > h1 {
+		float: left; 
+		font-weight: 400;
+		font-size: 25px;
+		margin-left: 30px;
+		margin-top: 8px;
+		color: white;
+	}
+	.header-icon {
+		float: right;
+		padding: 9px;
+	}
+	.header-icon-separator {
+		float: right;
+		height: 49px;
+		width: 2px;
+		background-image: url('separator.png');
+	}
+	#clock {
+		text-align: center;
+		width: 100%;
+		margin-top: -10px;
+		margin-bottom: -20px;
+	}
+	#clock > span {
+		font-family: 'Fira Mono';
+		font-size: 96px;
+	}
+	.section-header {
+		width: 100%; 
+		padding-left: 13px; 
+		padding-right: 13px; 
+		height: 32px; 
+	}
+	.section-header > div {
+		width: 100%; 
+		height: 100%;
+		padding-top: 6px;
+		border-bottom: 1px solid #FF4E00; 
+		padding-left: 13px; 
+		padding-right: 13px;
+	}
+	.section-header > div > span {
+		color: #FF4E00; 
+	}
+	.section-item {
+		width: 100%; 
+		height: 60px;
+		padding: 7px 20px 7px 20px;
+	}
+	.section-item > .section-item-main {
+		width: 100%;
+		height: 22px;
+		font-size: 19px;
+	}
+	.section-item > .section-item-alt {
+		width: 100%;
+		height: 22px;
+		font-size: 17px;
+		font-weight: 500;
+		color: gray;
+	}
+	
+  </style>
+</head>
+<body>
+	<header>
+        <h1>Pomodoro</h1>
+		<div class="header-icon"><img src="actionicon_settings_30x30.png"></img></div>
+		<div class="header-icon-separator"></div>
+		<div class="header-icon"><img src="actionicon_menu_30x30.png"></img></div>
+	</header>
+	<div id="clock">
+		<span>20:20</span>
+	</div>
+	<div class="section-header">
+		<div>
+			<span>Status</span>
+		</div>
+	</div>
+	<div class="section-item">
+		<div class="section-item-main">woke up in the morning</div>
+		<div class="section-item-alt">and got myself a beer</div>
+	</div>
+	
+
+
+</body></html>
