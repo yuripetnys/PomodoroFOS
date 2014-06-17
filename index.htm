@@ -1,0 +1,262 @@
+<html><head>
+	<meta charset="utf-8">
+	<title>Building Blocks app</title>
+	<script src="js/jquery-2.1.0.min.js"></script>
+	<script src="js/knockout-3.1.0.js"></script>
+	<script src="js/moment-with-langs.js"></script>
+	<script src="js/pomodoro.js"></script>
+
+	<style>
+		* { font-family: "Fira Sans"; border: 0px; margin: 0px; padding: 0px; border-spacing: 0px; box-sizing: border-box; -moz-box-sizing: border-box; }
+		
+		@font-face { font-family: 'Fira Sans'; font-style: normal; font-weight: 400; src: local('Fira Sans'), local('FiraSans-Regular'), url("./fonts/FiraSans-Regular.otf"); }
+		@font-face { font-family: 'Fira Sans'; font-style: normal; font-weight: 300; src: local('Fira Sans'), local('FiraSans-Light'), url("./fonts/FiraSans-Light.otf"); }
+		@font-face { font-family: 'Fira Sans'; font-style: normal; font-weight: 500; src: local('Fira Sans'), local('FiraSans-Medium'), url("./fonts/FiraSans-Medium.otf"); }
+		@font-face { font-family: 'Fira Mono'; font-style: normal; font-weight: 400; src: local('Fira Mono'), local('FiraMono-Regular'), url("./fonts/FiraMono-Regular.otf"); }
+
+		body { overflow: hidden; }
+
+		article { background-color: white; position: absolute; width: 100%;	height: 100%; left: 100%; transition: left 1s ease 0s; overflow: hidden; }
+		.starting-page { left: 0%; }
+			
+		header { position: absolute; top: 0px; left: 0px; width: 100%; display: inline-block; height: 50px; 
+			background: linear-gradient(#CD6723, #BB482D); border-bottom: solid 1px #992F21; margin-bottom: 10px; }
+		header > h1 { font-weight: 400; font-size: 25px; margin-left: 30px; margin-top: 8px; color: white; }
+		.header-icon { float: right; padding: 9px; }
+		.header-icon-separator { float: right; height: 49px; width: 2px; background-image: url('images/separator.png'); }
+		.header-back { float: left; width: 21px; height: 49px; background-image: url('images/back.png'); }
+
+		section { position: absolute; top: 50px; left: 0px; width: 100%; bottom: 0%; overflow-x: hidden; padding-top: 10px; }
+		section.has-footer { padding-bottom: 56px; }
+
+		footer { position: absolute; bottom: 0px; left: 0px; width: 100%; height: 46px; background-color: black; opacity: 0.85; display: table; table-layout: fixed; 
+			transition: bottom 0.5s ease 0s; }
+		footer > div { height: 100%; width: 100%; display: table-cell; text-align: center; vertical-align: middle; }
+		footer > div:active { background-color: #008CAA; }
+		
+		#clock { text-align: center; width: 100%; margin-top: -10px; margin-bottom: -20px; }
+		#clock > span { font-family: 'Fira Mono'; font-size: 96px }
+
+		.big-button { width: 100%; padding: 5px 20px 5px 20px; height: 50px; }
+		.big-button > div { height: 40px; width: 100%; text-align: center; padding-top: 7px; border-radius: 3px; }
+		.small-buttons { width: 100%; padding: 5px 20px 5px 20px; height: 50px;	}
+		.small-buttons > div { height: 40px; width: 48%; text-align: center; padding-top: 7px; border-radius: 3px; }
+		.small-buttons > div:nth-child(1) { float: left; }
+		.small-buttons > div:nth-child(2) { float: right; }
+		.blue-button { border: 1px solid #008EAB; background: linear-gradient(#00C8F0, #00AAC8); }
+		.white-button, select { border: 1px solid #A6A6A6; background: linear-gradient(#FAFAFA, #CCCCCC); }
+		.red-button { border: 1px solid #820000; background: linear-gradient(#B80000, #830000); color: white; }
+		.blue-button:active, .white-button:active { border: 1px solid #008CAA; background: #008CAA;	}
+		.red-button:active { border: 1px solid #820000; background: #820000; }
+
+		.section-header { width: 100%; padding-left: 13px; padding-right: 13px; height: 32px; }
+		.section-header > div { width: 100%; height: 100%; padding-top: 6px; border-bottom: 1px solid #FF4E00; padding-left: 13px; padding-right: 13px; color: #FF4E00; }
+
+		.task-item { width: 100%; padding: 5px 20px 5px 20px; }
+		.task-item > div:nth-child(1) { width: 46px; height: 46px; margin-top: 12px; float: left; background-image: url('images/icon-128.png'); background-size:contain; background-repeat:no-repeat; }
+		.task-item > div:nth-child(2) { margin-left: 55px; }
+		.task-item > div:nth-child(2) > div { width: 100%; height: 22px; font-size: 17px; font-weight: 500; color: gray; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+		.task-item > div:nth-child(2) > div:nth-child(1) { font-size: 19px; height: 24px; font-weight: 400; color: black; }
+
+		.selected-task-item { background-color: #CFFFFF; }
+		.selected-task-item-overlay { position: absolute; top: 0%; left: 0%; width: 100%; height: 100%; background-color: #A3EFFF; opacity: 0.5; }
+		
+		.option-item { width: 100%; padding: 5px 20px 5px 20px; }
+		.option-item > div { width: 100%; padding-left: 13px; font-size: 19px; }
+		.option-item > select { -webkit-appearance: none; -moz-appearance: none; width: 100%; height: 50px; border: 1px solid #A6A6A6; background: linear-gradient(#FAFAFA, #CCCCCC); 
+			font-size: 17px; font-weight: 500; padding-left: 10px; padding-top: 10px; }
+				
+		.summary-span { font-size: 16px; display: inline-block; width: 110px; }
+	</style>
+</head><body>
+	<script>
+		function openTaskList() {
+			$("#main-page").css({"left": "-100%"});
+			$("#task-list-page").css({"left": "0%"});
+		}
+		function closeTaskList() {
+			$("#main-page").css({"left": "0%"});
+			$("#task-list-page").css({"left": "100%"});
+		}
+		function openSummaryList() {
+			PM.updateSummary();
+			$("#task-list-page").css({"left": "-100%"});
+			$("#task-summary-page").css({"left": "0%"});
+		}
+		function closeSummaryList() {
+			$("#task-list-page").css({"left": "0%"});
+			$("#task-summary-page").css({"left": "100%"});
+		}
+		function showPomodoro() {
+			$("#start-button").css({"display": "none"});
+			$("#running-pomodoro").css({"display": "block"});
+		}
+		function hidePomodoro() {
+			$("#running-pomodoro").css({"display": "none"});
+			$("#start-button").css({"display": "block"});
+		}
+		function toggleTaskItemSelection(a) {
+			ja = $(a);
+			if (ja.hasClass("selected-task-item")) {
+				ja.removeClass("selected-task-item");
+				hideTaskListFooter();
+			} else {
+				children = ja.parent().children();
+				children.removeClass("selected-task-item");				
+				ja.addClass("selected-task-item");
+				showTaskListFooter();
+			}
+		}
+		function showTaskListFooter() {
+			$("#task-list-footer").css({"bottom": "0px"});
+		}
+		function hideTaskListFooter() {
+			$("#task-list-footer").css({"bottom": "-46px"});
+		}
+		function openConfigPage() {
+			$("#main-page").css({"left": "-100%"});
+			$("#config-page").css({"left": "0%"});
+		}
+		function closeConfigPage() {
+			$("#config-page").css({"left": "100%"});
+			$("#main-page").css({"left": "0%"});
+		}
+	</script>
+	<article id="main-page" class="starting-page">
+		<header>
+			<div class="header-icon" onclick="openConfigPage();"><img src="images/actionicon_settings_30x30.png"></img></div>
+			<div class="header-icon-separator"></div>
+			<div class="header-icon" onclick="openTaskList();"><img src="images/actionicon_menu_30x30.png"></img></div>
+			<h1>Pomodoro</h1>
+		</header>
+		<section>
+			<div id="start-button" class="big-button"><div class="blue-button" data-bind="click: function() { if (startTimer()) showPomodoro(); }";>Start</div></div>
+			<div id="running-pomodoro" style="display: none;">
+				<div class="big-button"><div class="red-button" data-bind="click: function() { if (stopTimer()) hidePomodoro(); }">Stop</div></div>
+				<div class="small-buttons">
+					<div class="white-button" data-bind="click: changeTask">New Task</div>
+					<div class="white-button" data-bind="click: pottyPause">Pause</div>
+				</div>
+				<div class="section-header"><div>TIMER</div></div>
+				<div id="clock"><span data-bind="text: FormattedTimer">00:00</span></div>
+				<div class="section-header"><div>CURRENT TASK</div></div>
+				<div class="task-item">
+					<div></div>
+					<div>
+						<div data-bind="text: PomodoroManagerState.getStateName(State())"></div>
+						<div data-bind="text: 'Task: ' + CurrentTaskName()"></div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</article>
+	<article id="task-list-page">
+		<header>
+			<div class="header-back" onclick="closeTaskList();"></div>
+			<div class="header-icon" onclick="openSummaryList();"><img src="images/actionicon_menu_30x30.png"></img></div>
+			<h1>Pomodoro</h1>
+		</header>
+		<!-- ko if: Entries().length > 0 -->
+		<section class="has-footer">
+			<div class="section-header"><div>TASK HISTORY</div></div>
+				<!-- ko foreach: Entries -->
+					<div class="task-item" onclick="toggleTaskItemSelection(this);">
+						<div></div>
+						<div>
+							<div data-bind="text: PomodoroManagerState.getStateName(State)"></div>
+							<div data-bind="text: Name"></div>
+							<div data-bind="text: FormattedStartDate() + ' | ' + FormattedStartTime() + ' -> ' + FormattedEndTime()"></div>
+						</div>
+					</div>
+				<!-- /ko -->
+			</section>
+			<footer id="task-list-footer" style="bottom: -46px;">
+				<div><img src="images/actionicon_delete_30x30.png"/></div>
+				<div data-bind="click: clearAllEntries"><img src="images/actionicon_deleteall_30x30.png"/></div>
+			</footer>
+		<!-- /ko -->
+		<!-- ko if: Entries().length == 0 -->
+		<section>
+			<div class="section-header"><div>TASK HISTORY</div></div>
+		</section>
+		<!-- /ko -->
+	</article>
+	<article id="task-summary-page">
+		<header>
+			<div class="header-back" onclick="closeSummaryList();"></div>
+			<h1>Pomodoro</h1>
+		</header>
+		<!-- ko if: Entries().length > 0 -->
+		<section>
+			<div class="section-header"><div>TASK SUMMARY</div></div>
+			<!-- ko foreach: SummaryEntries --> 
+				<div class="task-item">
+					<div></div>
+					<div>
+						<div data-bind="text: Name"></div>
+						<div data-bind="text: 'Work: ' + FormattedWorkTime()"></div>
+						<div data-bind="text: 'Pause: ' + FormattedLeisureTime()"></div>
+					</div>
+				</div>
+			<!-- /ko -->
+		</section>
+		<!-- /ko -->
+		<!-- ko if: Entries().length == 0 -->
+		<section>
+			<div class="section-header"><div>TASK SUMMARY</div></div>
+		</section>
+		<!-- /ko -->
+	</article>	
+	<article id="config-page">
+		<header>
+			<div class="header-back" onclick="closeConfigPage();"></div>
+			<h1>Pomodoro</h1>
+		</header>
+		<section>
+			<div class="section-header"><div>POMODORO SETTINGS</div></div>
+			<div class="option-item">
+				<div>Work duration</div>
+				<select data-bind="value: WorkTime">
+					<option value=15>15 minutes</option>
+					<option value=20>20 minutes</option>
+					<option value=25 selected>25 minutes</option>
+					<option value=30>30 minutes</option>
+					<option value=35>35 minutes</option>
+				<select>
+			</div>
+			<div class="option-item">
+				<div>Short break duration</div>
+				<select data-bind="value: ShortBreakTime">
+					<option value=3>3 minutes</option>
+					<option value=5 selected>5 minutes</option>
+					<option value=7>7 minutes</option>
+					<option value=10>10 minutes</option>
+				<select>
+			</div>
+			<div class="option-item">
+				<div>Long break duration</div>
+				<select data-bind="value: LongBreakTime">
+					<option value=10>10 minutes</option>
+					<option value=13>13 minutes</option>
+					<option value=15 selected>15 minutes</option>
+					<option value=17>17 minutes</option>
+					<option value=20>20 minutes</option>
+				<select>
+			</div>
+			<div class="option-item">
+				<div># of short breaks before long break</div>
+				<select data-bind="value: MaxShortBreaks">
+					<option value=1>1 break</option>
+					<option value=2>2 breaks</option>
+					<option value=3 selected>3 breaks</option>
+					<option value=4>4 breaks</option>
+					<option value=5>5 breaks</option>
+				<select>
+			</div>
+			<div class="section-header"><div>ABOUT</div></div>
+		</section>
+	</article>
+	
+	<script>PM = new PomodoroManager(); PM.init(); </script>
+
+</body></html>
