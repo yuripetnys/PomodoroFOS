@@ -134,8 +134,8 @@ PomodoroEntry = function() {
     this.FormattedEnd = ko.computed(function() { return !!this.End() ? this.End().format("MMM DD HH:mm") : ""; }, this);
 	this.FormattedStartDate = ko.computed(function() { return !!this.Start() ? this.Start().format("YYYY/MM/DD") : ""; }, this);
 	this.FormattedStartTime = ko.computed(function() { return !!this.Start() ? this.Start().format("HH:mm") : ""; }, this);
-	this.FormattedEndDate = ko.computed(function() { return !!this.Start() ? this.Start().format("YYYY/MM/DD") : ""; }, this);
-	this.FormattedEndTime = ko.computed(function() { return !!this.Start() ? this.Start().format("HH:mm") : ""; }, this);
+	this.FormattedEndDate = ko.computed(function() { return !!this.End() ? this.End().format("YYYY/MM/DD") : ""; }, this);
+	this.FormattedEndTime = ko.computed(function() { return !!this.End() ? this.End().format("HH:mm") : ""; }, this);
     this.Difference = ko.computed(function() { 
         if (!!this.Start() && !!this.End()) {
             var diff = this.End().diff(this.Start(), "seconds");
