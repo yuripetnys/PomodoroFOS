@@ -215,14 +215,15 @@ function PomodoroManager() {
     this.CurrentEntry = null;
     this.ShortBreakCount = 0;
     this.IntervalID = null;
+    this.StateBeforePause = null;
+	this.TargetTime = null;
+	
     this.State = ko.observable(PomodoroManagerState.IDLE);
     this.Entries = ko.observableArray();
     this.SummaryEntries = ko.observableArray();
-    this.CurrentTaskName = ko.observable("New Task");
-    this.Timer = ko.observable(0);
-    this.StateBeforePause = null;
-    this.FormattedTimer = ko.computed(function() { return this.getFormattedTimer(); }, this);
-        
+    this.CurrentTaskName = ko.observable("New Task");	
+    this.FormattedTimer = ko.observable("00:00");
+    
     this.WorkTime = ko.observable(25);
     this.ShortBreakTime = ko.observable(5);
     this.MaxShortBreaks = ko.observable(3);
@@ -252,28 +253,24 @@ PomodoroManager.prototype.init = function() {
 PomodoroManager.prototype.startTimer = function() {
     var promptResult = this.promptForNewTask();
     
-    if (promptResult) {
-        if (DeviceDetector.IsIOS()) AudioManager.load();
-        this.State(PomodoroManagerState.WORKING);
-        this.resetTimer();
-        this.startEntry();
-        if (this.EnablePopupNotifications()) NotificationManager.requestNotificationPermission();
-        
-        this.IntervalID = setInterval(this.loop(this), 1000);
-		
-		return true;
-    }
+    if (!promptResult) return false;
+
+	if (DeviceDetector.IsIOS()) AudioManager.load();
+	this.State(PomodoroManagerState.WORKING);
+	this.resetTimer();
+	this.startEntry();
+	if (this.EnablePopupNotifications()) NotificationManager.requestNotificationPermission();
 	
-	return false;
+	this.IntervalID = setInterval(this.loop(this), 1000);
+	
+	return true;
 }
 PomodoroManager.prototype.changeTask = function() {
     var oldTask = this.CurrentTaskName();
     
     this.promptForNewTask();
-    
-    var newTask = this.CurrentTaskName();
-    
-    if (newTask != oldTask) {
+        
+    if (this.CurrentTaskName() != oldTask) {
         this.endEntry();
         this.startEntry();
     }
@@ -286,62 +283,59 @@ PomodoroManager.prototype.stopTimer = function() {
 	return true;
 }
 PomodoroManager.prototype.pottyPause = function() {
-    if (this.State() == PomodoroManagerState.POTTYPAUSE)
+	this.endEntry();
+	
+    if (this.State() != PomodoroManagerState.POTTYPAUSE)
     {
-        this.endEntry();
-        this.State(PomodoroManagerState.WORKING);
-        this.IntervalID = setInterval(this.loop(this), 1000);
-        this.startEntry();
-    }
-    else if (this.State() == PomodoroManagerState.WORKING)
-    {
-        this.endEntry();
         clearInterval(this.IntervalID);
+		this.StateBeforePause = this.State();
         this.State(PomodoroManagerState.POTTYPAUSE);
-        this.startEntry();
     }
+    else
+    {
+        this.State(this.StateBeforePause);
+        this.IntervalID = setInterval(this.loop(this), 1000);
+    }
+	
+	this.startEntry();
 }
 PomodoroManager.prototype.loop = function(manager) {
     return function() {
-        manager.Timer(manager.Timer() - 1);
-        if (manager.Timer() == 0)
+        currentTime = moment();
+		
+        if (manager.TargetTime.isBefore(currentTime))
         {
-            var oldState = manager.State();
             manager.endEntry();
             manager.goToNextState();
-            var newState = manager.State();
-            if (manager.EnablePopupNotifications()) {
-                var notificationMsg = "Your " + PomodoroManagerState.getStateName(oldState) + " Pomodoro is over. Starting a " + PomodoroManagerState.getStateName(newState) + " Pomodoro now!";
-                NotificationManager.notifyUser(notificationMsg, manager.RemoveOldNotifications());
-            }
-            if (manager.EnableAudioNotifications() && !(DeviceDetector.IsFirefoxOS() && manager.EnablePopupNotifications())) AudioManager.play();
-			//if (manager.EnableAudioNotifications()) AudioManager.play();
-            if ("vibrate" in window.navigator && manager.EnableVibration()) window.navigator.vibrate([200,100,200,100,200]);
             manager.startEntry();
+			
+            if (manager.EnablePopupNotifications()) 
+				NotificationManager.notifyUser("Starting a " + PomodoroManagerState.getStateName(manager.State()) + " Pomodoro now!", manager.RemoveOldNotifications());
+            if (manager.EnableAudioNotifications() && !(DeviceDetector.IsFirefoxOS() && manager.EnablePopupNotifications())) 
+				AudioManager.play();
+            if ("vibrate" in window.navigator && manager.EnableVibration()) 
+				window.navigator.vibrate([200,100,200,100,200]);
         }
+		else
+		{
+			manager.updateFormattedTimer(currentTime);
+		}
     }
 }
 PomodoroManager.prototype.goToNextState = function() {
-    if (this.State() == PomodoroManagerState.IDLE) {
-        return;
-    } else if (this.State() == PomodoroManagerState.SHORTBREAK) {
+    if (this.State() == PomodoroManagerState.SHORTBREAK) {
         this.ShortBreakCount = this.ShortBreakCount + 1;
         this.State(PomodoroManagerState.WORKING);
-        
-        this.resetTimer();
     } else if (this.State() == PomodoroManagerState.LONGBREAK) {
         this.ShortBreakCount = 0;
         this.State(PomodoroManagerState.WORKING);
-        this.resetTimer();
-    } else {
-        if (this.ShortBreakCount == this.MaxShortBreaks()) {
-            this.State(PomodoroManagerState.LONGBREAK);
-            this.resetTimer();
-        } else {
-            this.State(PomodoroManagerState.SHORTBREAK);
-            this.resetTimer();
-        }
-    }
+    } else if (this.ShortBreakCount == this.MaxShortBreaks()) {
+		this.State(PomodoroManagerState.LONGBREAK);
+	} else {
+		this.State(PomodoroManagerState.SHORTBREAK);
+	}
+	
+	this.resetTimer();
 }
 PomodoroManager.prototype.clearAllEntries = function() {
     this.Entries.removeAll();
@@ -369,25 +363,25 @@ PomodoroManager.prototype.endEntry = function() {
     this.Entries.unshift(this.CurrentEntry);
     this.CurrentEntry = null;
 }
-PomodoroManager.prototype.resetTimer = function() {
-    if (this.State() == PomodoroManagerState.WORKING) {
-        this.Timer(this.WorkTime() * 60);
-    } else if (this.State() == PomodoroManagerState.SHORTBREAK) {
-        this.Timer(this.ShortBreakTime() * 60);
-    } else if (this.State() == PomodoroManagerState.LONGBREAK) {
-        this.Timer(this.LongBreakTime() * 60);
-    } else if (this.State() == PomodoroManagerState.IDLE) {
-        this.Timer(0);
-    }
+PomodoroManager.prototype.updateFormattedTimer = function(currentTime) {
+	this.FormattedTimer(moment(this.TargetTime).subtract(currentTime).format("mm:ss"));
 }
-PomodoroManager.prototype.getFormattedTimer = function () {
-    if (!this.Timer()) return "00:00";
-    
-    var div = Math.floor(this.Timer()/60);
-    var rem = this.Timer() % 60;
-    div = div < 10 ? "0" + div : div;
-    rem = rem < 10 ? "0" + rem : rem;
-    return div + ":" + rem;
+PomodoroManager.prototype.resetTimer = function() {
+    a = 0;
+	
+	if (this.State() == PomodoroManagerState.WORKING) {
+        a = this.WorkTime();
+    } else if (this.State() == PomodoroManagerState.SHORTBREAK) {
+        a = this.ShortBreakTime();
+    } else if (this.State() == PomodoroManagerState.LONGBREAK) {
+        a = this.LongBreakTime();
+    } else if (this.State() == PomodoroManagerState.IDLE) {
+        a = 0;
+    }
+	
+	currentTime = moment();
+	this.TargetTime = moment(currentTime).add('minutes', a);
+	this.updateFormattedTimer(currentTime);
 }
 PomodoroManager.prototype.clearEntry = function (entry) {
     this.Parent.Entries.remove(entry);

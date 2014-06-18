@@ -8,7 +8,7 @@
   "icons": {
     "128": "/images/icon-128.png"
   },
-  "launch_path": "/pomodorofos/index.htm",
+  "launch_path": "/index.htm",
   "name": "Pomodoro",
   "origin": "app://pomodoro.polei.ro",
   "permissions": {
